@@ -20,6 +20,9 @@
  * @version    $Id$
  */
 
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunInSeparateProcess;
+
 /**
  * Black box testing for Zend_Session
  *
@@ -28,8 +31,8 @@
  * @subpackage UnitTests
  * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @group      Zend_Session
  */
+#[Group('Zend_Session')]
 class Zend_Session_SessionTest extends PHPUnit\Framework\TestCase
 {
     /**
@@ -47,26 +50,17 @@ class Zend_Session_SessionTest extends PHPUnit\Framework\TestCase
     protected $_savePath;
 
     /**
-     * Initializes instance data
-     *
-     * @return void
-     */
-    public function __construct($name = null, array $data = array(), $dataName = '')
-    {
-        parent::__construct($name, $data, $dataName);
-        $this->_script = 'php '
-            . '-c ' . escapeshellarg(php_ini_loaded_file()) . ' '
-            . '-d include_path=' . get_include_path() . ' '
-            . escapeshellarg(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'SessionTestHelper.php');
-
-        $this->_savePath = ini_get('session.save_path');
-    }
-
-    /**
      * Set up tests environment
      */
     public function setUp(): void
     {
+        $this->_script = escapeshellarg(PHP_BINARY) . ' '
+            . (php_ini_loaded_file() ? '-c ' . escapeshellarg(php_ini_loaded_file()) . ' ' : '')
+            . '-d include_path=' . escapeshellarg(get_include_path()) . ' '
+            . escapeshellarg(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'SessionTestHelper.php');
+
+        $this->_savePath = ini_get('session.save_path');
+
         // _unitTestEnabled is utilised by other tests to handle session data processing
         // Zend_Session tests should pass with _unitTestEnabled turned off
         Zend_Session::$_unitTestEnabled = false;
@@ -796,9 +790,9 @@ class Zend_Session_SessionTest extends PHPUnit\Framework\TestCase
     /**
      * test expiration of namespaces and namespace variables by seconds; expect expiration of specified keys/namespace
      *
-     * @runInSeparateProcess
      * @return void
      */
+    #[RunInSeparateProcess]
     public function testSetExpirationSeconds()
     {
         // Calculate common script execution time
@@ -860,9 +854,9 @@ class Zend_Session_SessionTest extends PHPUnit\Framework\TestCase
     /**
      * test expiration of namespaces by hops; expect expiration of specified namespace in the proper number of hops
      *
-     * @runInSeparateProcess
      * @return void
      */
+    #[RunInSeparateProcess]
     public function testSetExpireSessionHops()
     {
         $s               = new Zend_Session_Namespace('expireAll');
@@ -897,9 +891,9 @@ class Zend_Session_SessionTest extends PHPUnit\Framework\TestCase
     /**
      * test expiration of namespace variables by hops; expect expiration of specified keys in the proper number of hops
      *
-     * @runInSeparateProcess
      * @return void
      */
+    #[RunInSeparateProcess]
     public function testSetExpireSessionVarsByHops1()
     {
         $this->setExpireSessionVarsByHops();
@@ -908,18 +902,16 @@ class Zend_Session_SessionTest extends PHPUnit\Framework\TestCase
     /**
      * sanity check .. we should be able to repeat this test without problems
      *
-     * @runInSeparateProcess
      * @return void
      */
+    #[RunInSeparateProcess]
     public function testSetExpireSessionVarsByHops2()
     {
         $this->setExpireSessionVarsByHops();
     }
 
-    /**
-     * @group ZF-7196
-     * @runInSeparateProcess
-     */
+    #[Group('ZF-7196')]
+    #[RunInSeparateProcess]
     public function testUnsettingNamespaceKeyWithoutUnsettingCompleteExpirationData()
     {
         $namespace = new Zend_Session_Namespace('DummyNamespace');
@@ -1003,9 +995,9 @@ class Zend_Session_SessionTest extends PHPUnit\Framework\TestCase
     /**
      * test expiration of namespace variables by hops; expect expiration of specified keys in the proper number of hops
      *
-     * @runInSeparateProcess
      * @return void
      */
+    #[RunInSeparateProcess]
     public function testSetExpireSessionVarsByHopsOnUse()
     {
         $s               = new Zend_Session_Namespace('expireGuava');
@@ -1055,9 +1047,7 @@ class Zend_Session_SessionTest extends PHPUnit\Framework\TestCase
         // Zend_Session::destroy();
     }
 
-    /**
-     * @group ZF-5003
-     */
+    #[Group('ZF-5003')]
     public function testProcessSessionMetadataShouldNotThrowAnError()
     {
         Zend_Session::$_unitTestEnabled = true;
@@ -1070,9 +1060,9 @@ class Zend_Session_SessionTest extends PHPUnit\Framework\TestCase
     /**
      * test for method getNamespace()
      *
-     * @group ZF-1982
      * @return void
      */
+    #[Group('ZF-1982')]
     public function testGetNameSpaceMethod()
     {
         Zend_Session::$_unitTestEnabled = true;
@@ -1088,22 +1078,15 @@ class Zend_Session_SessionTest extends PHPUnit\Framework\TestCase
         }
     }
 
-    /**
-     * @group ZF-11186
-     */
+    #[Group('ZF-11186')]
     public function testNoNoticesIfNoValidatorDataInSession()
     {
-        try {
-            Zend_Session::start();
-            Zend_Session::registerValidator(new Zend_Session_Validator_NoticeValidator);
-        } catch (PHPUnit\Framework\Error\Notice $exception) {
-            $this->fail($exception->getMessage());
-        }
+        // A notice raised here fails the test (failOnNotice)
+        Zend_Session::start();
+        Zend_Session::registerValidator(new Zend_Session_Validator_NoticeValidator);
     }
 
-    /**
-     * @group ZF-3378
-     */
+    #[Group('ZF-3378')]
     public function testInvalidPreexistingSessionIdDoesNotPreventRegenerationOfSid()
     {
         // This test cannot be run by itself since the call to Zend_Session::start tries to write session INI settings
